@@ -1,25 +1,43 @@
-import logo from './logo.svg';
+import React, { useEffect, useState } from "react";
+import {getImages} from './api';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+const App = () => {
+  const[imagelist , setImageList]=useState([])
+  const[next , setNext]=useState(null);
+
+  useEffect(()=>{
+    const fetchData = async()=>{
+      const responseJSON = await getImages();
+      setImageList(responseJSON.resources);
+      setNext(responseJSON.next_cursor);
+    }
+
+    fetchData();
+  } ,[])
+
+  const handleLoadMore = async ()=>{
+    const responseJSON = await getImages(next);
+    setImageList((cImagelist)=>[
+      ...cImagelist , ...responseJSON.resources
+    ]);
+    setNext(responseJSON.next_cursor);
+  }
+
+  return(
+    <>
+    <div className="image-grid">
+      {imagelist.map(
+        (image) => (<img src={image.url} alt={image.public_id} ></img>)
+      )}
     </div>
-  );
+    <footer className="footer">
+      <center>
+      {next && (<button onClick={handleLoadMore}> Load More </button>)}
+      </center>
+    </footer>
+    </>
+  )
 }
 
-export default App;
+export default App
